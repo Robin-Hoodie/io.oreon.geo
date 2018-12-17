@@ -17,7 +17,7 @@
             </router-link>
           </li>
           <li v-if="user">
-            <router-link :to="{name: 'ViewProfile', params: { id: user.uid}}">{{user.email}}</router-link>
+            <router-link :to="{name: 'ViewProfile', params: { id: user.id}}">{{user.alias}}</router-link>
           </li>
           <li v-if="user">
             <a @click="logout">
@@ -32,6 +32,7 @@
 
 <script>
   import firebase from 'firebase';
+  import db from '@/firebase/init';
 
   export default {
     name: 'Navbar',
@@ -50,7 +51,16 @@
     },
     created() {
       firebase.auth()
-        .onAuthStateChanged(user => this.user = user);
+        .onAuthStateChanged(user => {
+          if (user) {
+            db.collection('users').doc(user.uid).get().then(doc => {
+              this.user = doc.data();
+              this.user.id = user.uid;
+            });
+          } else {
+            this.user = null;
+          }
+        });
     }
   }
 </script>
