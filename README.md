@@ -9,9 +9,9 @@ Lastly, Materialize is used as the CSS framework.
 
 ## Live version
 
-A live version of the project can be found over at https://geo.oreon.io/signUp
+A live version of the project can be found over at https://geo.oreon.io
 
-Start by signing up, after that you will be redirected to the world map where you will see markers of other users' locations.  
+Start by logging in with your Google Account or signing up, after that you will be redirected to the world map where you will see markers of other users' locations.  
 Clicking on one of these markers takes you to their profile page where you will be able to comment on their wall
 
 ## Local Setup
