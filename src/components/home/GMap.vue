@@ -39,7 +39,7 @@
           console.error(error);
           this.renderMap();
         }, {
-          maximumAge: Infinity,
+          maximumAge: 60000,
           timeout: 3000,
           enableHighAccuracy: true
         });

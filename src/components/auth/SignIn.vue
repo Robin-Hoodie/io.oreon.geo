@@ -27,11 +27,23 @@
         </button>
       </div>
     </form>
+    <div class="center-align google-btn">
+      <button class="btn white"
+              @click="signInWithGoogle()">
+        <img width="20px"
+             class="google-btn__logo"
+             alt="Google Logo"
+             :src="googleLogo"/>
+        Sign in with Google
+      </button>
+    </div>
   </div>
 </template>
 
 <script>
   import firebase from 'firebase';
+  import db from '@/firebase/init';
+  import googleLogo from '@/assets/google_logo.png';
 
   export default {
     name: 'SignIn',
@@ -39,7 +51,8 @@
       return {
         email: '',
         password: '',
-        feedback: ''
+        feedback: '',
+        googleLogo
       }
     },
     methods: {
@@ -57,6 +70,28 @@
         } else {
           this.feedback = 'Please provide an email and password';
         }
+      },
+      signInWithGoogle() {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        this.signInWithPopup(provider);
+      },
+      signInWithPopup(provider) {
+        firebase.auth().signInWithPopup(provider)
+          .then(credentials => {
+            const ref = db.collection('users').doc(credentials.user.uid);
+            ref.get()
+              .then(doc => {
+                if (!doc.exists) {
+                  return ref.set({
+                    geolocation: null,
+                    alias: credentials.user.displayName
+                  });
+                }
+              })
+              .then(() => this.$router.push({ name: 'GMap' }))
+              .catch(error => console.error(error));
+          })
+          .catch(error => console.error(error))
       }
     }
   }
@@ -74,5 +109,17 @@
 
   .sign-in .field {
     margin-bottom: 16px;
+  }
+
+  .sign-in .google-btn button {
+    color: black;
+    font-weight: bold;
+    margin-bottom: 20px;
+  }
+
+  .sign-in .google-btn .google-btn__logo {
+    position: relative;
+    right: 5px;
+    top: 5px;
   }
 </style>

@@ -5,7 +5,12 @@
       <h2 class="deep-purple-text center-align">
         {{profile.alias}}'s Wall
       </h2>
-      <ul class="comments collection">
+      <p v-if="!comments.length"
+         class="center-align card-content grey-text text-darken-2">
+        There are no messages on this wall yet
+      </p>
+      <ul class="comments collection"
+          v-if="comments.length">
         <li v-for="(comment, index) in comments"
             :key="index">
           <div class="deep-purple-text alias"
@@ -58,7 +63,6 @@
       '$route.params.id': {
         handler: function (userId) {
           this.comments = [];
-
           db.collection('users')
             .doc(userId)
             .get()
@@ -74,7 +78,7 @@
 
           db.collection('comments')
             .where('to', '==', userId)
-            .orderBy('time', 'asc')
+            .orderBy('time', 'desc')
             .onSnapshot(snapshot => snapshot.docChanges()
               .forEach(change => {
                 if (change.type === 'added') {
