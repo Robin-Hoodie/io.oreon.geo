@@ -26,25 +26,22 @@
           this.lat = position.coords.latitude;
           this.lng = position.coords.longitude;
           db.collection('users')
-            .where('user_id', '==', user.uid)
-            .get()
-            .then(snapshot => snapshot.forEach(user => db.collection('users')
-                .doc(user.id).update({
-                  geolocation: {
-                    lat: this.lat,
-                    lng: this.lng
-                  }
-                })
-              )
-            )
+            .doc(user.uid)
+            .update({
+              geolocation: {
+                lat: this.lat,
+                lng: this.lng
+              }
+            })
             .then(this.renderMap)
             .catch(error => console.error(error));
         }, error => {
           console.error(error);
           this.renderMap();
         }, {
-          maximumAge: 60000,
-          timeout: 3000
+          maximumAge: Infinity,
+          timeout: 3000,
+          enableHighAccuracy: true
         });
       } else {
         this.renderMap();

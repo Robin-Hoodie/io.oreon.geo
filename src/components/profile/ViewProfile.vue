@@ -6,13 +6,17 @@
         {{profile.alias}}'s Wall
       </h2>
       <ul class="comments collection">
-        <li v-for="comment in comments"
-            :key="comment.time">
-          <div class="deep-purple-text">
+        <li v-for="(comment, index) in comments"
+            :key="index">
+          <div class="deep-purple-text alias"
+               @click="navigateToProfile(comment.from)">
             {{comment.from}}
           </div>
-          <div class="grey-text darken-2">
+          <div>
             {{comment.content}}
+          </div>
+          <div class="grey-text time">
+            {{comment.time}}
           </div>
           <i class="material-icons delete"
              v-if="user && comment.from === user.alias"
@@ -37,53 +41,68 @@
 <script>
   import db from '@/firebase/init';
   import firebase from 'firebase';
+  import moment from 'moment';
 
   export default {
     name: 'ViewProfile',
     data() {
       return {
-        profile: null,
         newComment: '',
         feedback: '',
+        profile: null,
         user: null,
         comments: []
       }
     },
-    created() {
-      const ref = db
-        .collection('users');
-      ref.where('user_id', '==', firebase.auth().currentUser.uid)
-        .get()
-        .then(snapshot => snapshot.forEach(user => {
-          this.user = user.data();
-          this.user.id = user.id;
-        }))
-        .catch(error => console.error(error));
+    watch: {
+      '$route.params.id': {
+        handler: function (userId) {
+          this.comments = [];
 
-      ref.doc(this.$route.params.id)
+          db.collection('users')
+            .doc(userId)
+            .get()
+            .then(doc => {
+              if (doc.exists) {
+                this.profile = doc.data();
+                this.profile.id = userId;
+              } else {
+                this.$router.push({ name: 'SignIn' });
+              }
+            })
+            .catch(error => console.error(error));
+
+          db.collection('comments')
+            .where('to', '==', userId)
+            .orderBy('time', 'asc')
+            .onSnapshot(snapshot => snapshot.docChanges()
+              .forEach(change => {
+                if (change.type === 'added') {
+                  const data = change.doc.data();
+                  this.comments.unshift({
+                    id: change.doc.id,
+                    time: moment(data.time).format('lll'),
+                    content: data.content,
+                    from: data.from,
+                    to: data.to
+                  });
+                } else if (change.type === 'removed') {
+                  this.comments = this.comments.filter(comment => change.doc.id !== comment.id);
+                }
+              }));
+        },
+        immediate: true
+      }
+    },
+    created() {
+      db.collection('users')
+        .doc(firebase.auth().currentUser.uid)
         .get()
         .then(doc => {
-          if (doc.exists) {
-            this.profile = doc.data();
-          } else {
-            this.$router.push({ name: 'SignIn' });
-          }
+          this.user = doc.data();
+          this.user.id = doc.id;
         })
         .catch(error => console.error(error));
-
-      db.collection('comments')
-        .where('to', '==', this.$route.params.id)
-        .onSnapshot(snapshot => snapshot.docChanges()
-          .forEach(change => {
-            if (change.type === 'added') {
-              this.comments.unshift({
-                id: change.doc.id,
-                ...change.doc.data()
-              });
-            } else if (change.type === 'removed') {
-              this.comments = this.comments.filter(comment => change.doc.data().time !== comment.time);
-            }
-          }));
     },
     methods: {
       addComment() {
@@ -105,6 +124,19 @@
         db.collection('comments')
           .doc(id)
           .delete()
+          .catch(error => console.error(error));
+      },
+      navigateToProfile(alias) {
+        db.collection('users')
+          .where('alias', '==', alias)
+          .get()
+          .then(snapshot => {
+            this.$router.push({
+              name: 'ViewProfile', params: {
+                id: snapshot.docs[0].id
+              }
+            })
+          })
           .catch(error => console.error(error));
       }
     }
@@ -128,6 +160,10 @@
     position: relative;
   }
 
+  .view-profile .alias {
+    cursor: pointer;
+  }
+
   .view-profile .delete {
     position: absolute;
     top: 5px;
@@ -135,5 +171,9 @@
     color: #ccc;
     font-size: 1.5em;
     cursor: pointer;
+  }
+
+  .view-profile time {
+    font-size: .4em;
   }
 </style>

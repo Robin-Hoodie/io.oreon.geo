@@ -52,7 +52,7 @@
             .then(() => this.$router.push({ name: 'GMap' }))
             .catch(error => {
               this.feedback = error.message;
-              console.error(error)
+              console.error(error);
             });
         } else {
           this.feedback = 'Please provide an email and password';

@@ -42,7 +42,6 @@
 </template>
 
 <script>
-  import slugify from 'slugify';
   import db from '@/firebase/init';
   import firebase from 'firebase';
 
@@ -59,34 +58,20 @@
     methods: {
       signUp() {
         if (this.alias && this.email && this.password) {
-          const slug = slugify(this.alias, {
-            replacement: '-',
-            remove: /[$*_+~.()'"!\-:@]/g,
-            lower: true
-          });
-          let ref = db.collection('users').doc(slug);
-          ref.get()
-            .then(doc => {
-              if (doc.exists) {
-                this.feedback = 'This alias already exists';
-              } else {
-                this.feedback = '';
-                firebase.auth()
-                  .createUserWithEmailAndPassword(this.email, this.password)
-                  .then(credentials => ref.set({
-                    alias: this.alias,
-                    geolocation: null,
-                    user_id: credentials.user.uid
-                  }))
-                  .then(() => this.$router.push({ name: 'GMap' }))
-                  .catch(error => {
-                    this.feedback = error.message;
-                    console.error(error)
-                  });
-              }
-            })
-            .catch(error => console.error(error));
-
+          this.feedback = '';
+          firebase.auth()
+            .createUserWithEmailAndPassword(this.email, this.password)
+            .then(credentials => db.collection('users')
+              .doc(credentials.user.uid)
+              .set({
+                alias: this.alias,
+                geolocation: null
+              }))
+            .then(() => this.$router.push({ name: 'GMap' }))
+            .catch(error => {
+              this.feedback = error.message;
+              console.error(error);
+            });
         } else {
           this.feedback = 'You must enter a value for all fields';
         }
