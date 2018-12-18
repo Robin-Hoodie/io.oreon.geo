@@ -4,7 +4,9 @@ Pet project that lets users view other user's last known location and gives them
 The comments will be updated in real-time as they come in.
 
 This project was written in Vue and uses Firestore as its real-time database as well as its authentication providers.   
-Drawing the map and marking the users' last known location is handled via the Google Maps API  
+Drawing the map and marking the users' last known location is handled via the Google Maps API.
+
+When you choose to Sign Up for an account you will need to provide an alias. An alias should be unique, this logic will be handled by a Firebase Function.
 Lastly, Materialize is used as the CSS framework.
 
 ## Live version
