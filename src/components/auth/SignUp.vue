@@ -59,19 +59,27 @@
       signUp() {
         if (this.alias && this.email && this.password) {
           this.feedback = '';
-          firebase.auth()
-            .createUserWithEmailAndPassword(this.email, this.password)
-            .then(credentials => db.collection('users')
-              .doc(credentials.user.uid)
-              .set({
-                alias: this.alias,
-                geolocation: null
-              }))
-            .then(() => this.$router.push({ name: 'GMap' }))
-            .catch(error => {
-              this.feedback = error.message;
-              console.error(error);
-            });
+          const checkAlias = firebase.functions().httpsCallable('checkAlias');
+          checkAlias({
+            alias: this.alias
+          }).then(result => {
+            if (!result.data.unique) {
+              this.feedback = 'Your chosen alias has already been taken'
+            } else {
+              return firebase.auth()
+                .createUserWithEmailAndPassword(this.email, this.password)
+                .then(credentials => db.collection('users')
+                  .doc(credentials.user.uid)
+                  .set({
+                    alias: this.alias,
+                    geolocation: null
+                  }))
+                .then(() => this.$router.push({ name: 'GMap' }))
+            }
+          }).catch(error => {
+            this.feedback = error.message;
+            console.error(error);
+          });
         } else {
           this.feedback = 'You must enter a value for all fields';
         }
